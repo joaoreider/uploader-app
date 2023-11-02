@@ -4,19 +4,37 @@ const fs = require("fs/promises");
 const PORT = 3000;
 const server = net.createServer((socket) => {});
 
+let fileHandler;
+let fileStream;
 // with socket you communicate with the client
 server.on("connection", (socket) => {
   console.log("A new connection has been established.");
 
   socket.on("data", async (chunk) => {
-    console.log(`Data received from client: ${chunk.toString()}`);
-    const fileHandler = await fs.open(`storage/test.txt`, "w");
-    const fileStream = fileHandler.createWriteStream();
-    fileStream.write(chunk);
+    if (!fileHandler) {
+      socket.pause(); // pause the socket until the file is created
+      fileHandler = await fs.open(`storage/file.mp4`, "w");
+      fileStream = fileHandler.createWriteStream(); // stream to write to the file
+      // Writing to the file
+      fileStream.write(chunk);
+
+      socket.resume(); // resume the socket when the file is created
+
+      fileStream.on("drain", () => {
+        socket.resume(); // resume the socket when the buffer is empty
+      });
+    } else {
+      if (!fileStream.write(chunk)) {
+        socket.pause(); // take care of backpressure (when returning false)
+      }
+    }
   });
 
   socket.on("end", () => {
     fileHandler.close();
+    fileHandler = null;
+    fileStream = null;
+    socket.end();
     console.log("Closing connection with the client.");
   });
 });
