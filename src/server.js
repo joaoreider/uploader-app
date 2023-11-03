@@ -13,10 +13,12 @@ server.on("connection", (socket) => {
   socket.on("data", async (chunk) => {
     if (!fileHandler) {
       socket.pause(); // pause the socket until the file is created
-      fileHandler = await fs.open(`storage/file.mp4`, "w");
+      const fileName = chunk.toString().split(": ")[1].replace(" ---", "");
+      console.log("File name received: " + fileName);
+      fileHandler = await fs.open(`storage/up-${fileName}`, "w");
       fileStream = fileHandler.createWriteStream(); // stream to write to the file
       // Writing to the file
-      fileStream.write(chunk);
+      fileStream.write(chunk.subarray(chunk.indexOf("---") + 3));
 
       socket.resume(); // resume the socket when the file is created
 

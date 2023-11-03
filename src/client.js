@@ -1,13 +1,17 @@
 const net = require("net");
 const fs = require("fs/promises");
+const path = require("path");
 
 const PORT = 3000;
 const HOST = "127.0.0.1";
 
 const socket = net.createConnection({ host: HOST, port: PORT }, async () => {
-  const filePath = "file_example_MP4_1920_18MG.mp4";
+  const filePath = process.argv[2];
+  const fileName = path.basename(filePath);
   const fileHandler = await fs.open(filePath, "r");
   const fileStream = fileHandler.createReadStream();
+
+  socket.write(`filename: ${fileName} ---`);
 
   fileStream.on("data", (chunk) => {
     if (!socket.write(chunk)) {
