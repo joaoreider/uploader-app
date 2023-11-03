@@ -3,12 +3,10 @@ const fs = require("fs/promises");
 
 const PORT = 3000;
 const server = net.createServer((socket) => {});
-
-let fileHandler;
-let fileStream;
 // with socket you communicate with the client
 server.on("connection", (socket) => {
   console.log("A new connection has been established.");
+  let fileHandler, fileStream;
 
   socket.on("data", async (chunk) => {
     if (!fileHandler) {
